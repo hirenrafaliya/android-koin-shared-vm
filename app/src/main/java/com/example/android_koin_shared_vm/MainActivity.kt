@@ -1,39 +1,43 @@
 package com.example.android_koin_shared_vm
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.android_koin_shared_vm.ui.theme.AndroidkoinsharedvmTheme
 import com.example.android_koin_shared_vm.util.Column
 import com.example.android_koin_shared_vm.viewmodel.MainViewModel
-import org.koin.androidx.compose.koinViewModel
+import org.koin.androidx.compose.navigation.koinNavViewModel
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnrememberedGetBackStackEntry")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             AndroidkoinsharedvmTheme {
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "screenA") {
+                NavHost(navController = navController, startDestination = "screenA", route = "parentRoute") {
                     composable("screenA") {
-                        val viewModel: MainViewModel = koinViewModel()
+                        // create backstack entry from parent route which was passed in NavHost
+                        val backStackEntry = remember { navController.getBackStackEntry("parentRoute") }
+                        // pass the backstack entry as viewModelStoreOwner
+                        val viewModel: MainViewModel = koinNavViewModel(viewModelStoreOwner = backStackEntry)
                         ScreenA(viewModel) {
                             navController.navigate("screenB")
                         }
                     }
                     composable("screenB") {
-                        val viewModel: MainViewModel = koinViewModel()
+                        // create backstack entry from parent route which was passed in NavHost
+                        val backStackEntry = remember { navController.getBackStackEntry("parentRoute") }
+                        // pass the backstack entry as viewModelStoreOwner
+                        val viewModel: MainViewModel = koinNavViewModel(viewModelStoreOwner = backStackEntry)
                         ScreenB(viewModel) {
                             navController.navigate("screenA")
                         }
@@ -48,7 +52,7 @@ class MainActivity : ComponentActivity() {
 fun ScreenA(viewModel: MainViewModel, onNavigate: () -> Unit) {
     Column {
         Text(text = "SCREEN A")
-        Text(text = "MainViewModel.firstname = ${viewModel.firstName}")
+        Text(text = "MainViewModel.firstname = ${viewModel.firstName.value}")
         Button(onClick = {
             viewModel.updateName("ABC")
         }) {
@@ -64,7 +68,7 @@ fun ScreenA(viewModel: MainViewModel, onNavigate: () -> Unit) {
 fun ScreenB(viewModel: MainViewModel, onNavigate: () -> Unit) {
     Column {
         Text(text = "SCREEN B")
-        Text(text = "MainViewModel.firstname = ${viewModel.firstName}")
+        Text(text = "MainViewModel.firstname = ${viewModel.firstName.value}")
         Button(onClick = {
             viewModel.updateName("DEF")
         }) {
@@ -75,4 +79,3 @@ fun ScreenB(viewModel: MainViewModel, onNavigate: () -> Unit) {
         }
     }
 }
-
